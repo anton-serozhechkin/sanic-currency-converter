@@ -5,6 +5,7 @@ from sanic.response import json, html, text
 from jinja2 import Environment, PackageLoader, select_autoescape
 from decimal import Decimal
 from binance.exceptions import BinanceAPIException
+import hmac
 
 class Controller:
 
@@ -41,6 +42,7 @@ class Controller:
 
 
     def __get_price(self):
+        print(self.__generate_sign())
         status = 'ERROR'
         if "in_currency" not in self._request_args:
             data = {"status": status, "msg": "The currency you want to exchange is not specified"}
@@ -49,12 +51,12 @@ class Controller:
         elif "in_amount" not in self._request_args:
             data = {"status": status, "msg": "The amount of currency is not specified"}
         else:
-            strip_in_currency, strip_out_currency, in_amount = self.__strip_currency()
-            symbol = "{}{}".format(strip_in_currency.strip("'"), strip_out_currency.strip("'"))
+            result_strip_currency = self.__strip_currency()
+            symbol = "{}{}".format(result_strip_currency[0], result_strip_currency[1])
             try:
                 status = "OK"
                 symbol_ticker = self.__client.get_symbol_ticker(params={'symbol': symbol})
-                data = {"rate": symbol_ticker, "out_amount": self.__calc(symbol_ticker, in_amount)}
+                data = {"rate": symbol_ticker, "out_amount": self.__calc(symbol_ticker, result_strip_currency[2])}
             except BinanceAPIException:
                 status = 'ERROR'
                 data = {"status": status, "msg": "Make sure the names of the currencies you entered are correct"}
@@ -65,4 +67,13 @@ class Controller:
         strip_in_currency = str(self._request_args["in_currency"]).strip('[]"')
         strip_out_currency = str(self._request_args["out_currency"]).strip('[]"')
         in_amount = str(self._request_args["in_amount"]).strip('[]"')
-        return strip_in_currency, strip_out_currency, in_amount
+        result = [strip_in_currency.strip("'"), strip_out_currency.strip("'"), in_amount.strip("'")]
+        return result
+
+    
+    def __generate_sign(self):
+        result = sorted(self.__strip_currency())
+        sign = "{}{}{}".format(result[0], result[1], result[2])
+        return sign
+
+    #def __check_sign(self):

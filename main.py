@@ -18,8 +18,9 @@ app = Sanic("calc_sanic")
 
 @app.route("/calc")#, methods=["POST"])
 async def test(request):
+  #print(request.headers)
   controller = Controller(request, request.args, api_key, api_secret)
   responce = controller._responce()
   return responce
 
-app.run(host="0.0.0.0", port=8001)
+app.run(host="0.0.0.0", port=8000)
