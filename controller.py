@@ -43,21 +43,21 @@ class Controller:
     def __get_price(self):
         status = 'ERROR'
         if "in_currency" not in self._request_args:
-            data = 'The currency you want to exchange is not specified'
+            data = {"status": status, "msg": "The currency you want to exchange is not specified"}
         elif "out_currency" not in self._request_args:
-            data = "Output currency not specified"
+            data = {"status": status, "msg": "Output currency not specified"}
         elif "in_amount" not in self._request_args:
-            data = 'The amount of currency is not specified'
+            data = {"status": status, "msg": "The amount of currency is not specified"}
         else:
             strip_in_currency, strip_out_currency, in_amount = self.__strip_currency()
             symbol = "{}{}".format(strip_in_currency.strip("'"), strip_out_currency.strip("'"))
             try:
                 status = "OK"
                 symbol_ticker = self.__client.get_symbol_ticker(params={'symbol': symbol})
-                data = self.__calc(symbol_ticker, in_amount)
-            except BinanceAPIException as e:
-                data = 'Make sure the names of the currencies you entered are correct'
+                data = {"rate": symbol_ticker, "out_amount": self.__calc(symbol_ticker, in_amount)}
+            except BinanceAPIException:
                 status = 'ERROR'
+                data = {"status": status, "msg": "Make sure the names of the currencies you entered are correct"}
         return status, data
 
 
