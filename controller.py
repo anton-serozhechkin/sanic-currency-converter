@@ -4,7 +4,7 @@ from binance.client import Client
 from sanic.response import json, html, text
 from jinja2 import Environment, PackageLoader, select_autoescape
 from decimal import Decimal
-
+from binance.exceptions import BinanceAPIException
 
 class Controller:
 
@@ -24,14 +24,14 @@ class Controller:
 
 
     def _responce(self):
-        if self._request == "POST":
-            status, data = self.__get_price()
-            if status == 'OK':
-                return self._get_template('index.html', title='Request post',data=data)
-            else:
-                return self._get_template('index.html', title='Error', data=data)
+        #if self._request == "POST":
+        status, data = self.__get_price()
+        if status == 'OK':
+            return self._get_template('index.html', title='Request post',data=data)
         else:
-            return self._get_template('index.html', title='Request get')
+            return self._get_template('index.html', title='Error', data=data)
+        #else:
+        #    return self._get_template('index.html', title='Request get')
 
 
     def _get_template(self, tpl, **kwargs):
@@ -49,11 +49,15 @@ class Controller:
         elif "in_amount" not in self._request_args:
             data = 'The amount of currency is not specified'
         else:
-            status = "OK"
             strip_in_currency, strip_out_currency, in_amount = self.__strip_currency()
             symbol = "{}{}".format(strip_in_currency.strip("'"), strip_out_currency.strip("'"))
-            symbol_ticker = self.__client.get_symbol_ticker(params={'symbol': symbol})
-            data = self.__calc(symbol_ticker, in_amount)
+            try:
+                status = "OK"
+                symbol_ticker = self.__client.get_symbol_ticker(params={'symbol': symbol})
+                data = self.__calc(symbol_ticker, in_amount)
+            except BinanceAPIException as e:
+                data = 'Make sure the names of the currencies you entered are correct'
+                status = 'ERROR'
         return status, data
 
 
