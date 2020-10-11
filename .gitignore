@@ -1,0 +1,5 @@
+# enc file
+.env
+
+# python cache
+__pycache__/
