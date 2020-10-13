@@ -7,5 +7,6 @@ Example request args - localhost:8002/calc?out_currency=USDT&in_amount=2&in_curr
 If you didn't pass signature in headers, responce will ne with nessesary signature, you can paste it
 
 # Start local
+touch .env
 pip3 install -r requirements.txt
 python3 main.py
